@@ -1,0 +1,53 @@
+name: Handle Appointment Issue
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  process-appointment:
+    # 이슈 제목에 '[약속 신청]'이 포함된 경우에만 실행
+    if: contains(github.event.issue.title, '[약속 신청]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 이슈 본문에서 날짜와 장소 추출하기
+      - name: Extract Date and Place
+        id: extract
+        run: |
+          BODY="${{ github.event.issue.body }}"
+          
+          # '날짜:' 뒤에 오는 문자열 추출
+          DATE=$(echo "$BODY" | grep -oP '(?<=- 날짜: ).*')
+          # '장소:' 뒤에 오는 문자열 추출
+          PLACE=$(echo "$BODY" | grep -oP '(?<=- 장소: ).*')
+          
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+          echo "place=$PLACE" >> $GITHUB_OUTPUT
+
+      # 추출한 정보로 이메일 발송 (이메일 아이디/비번은 네 말대로 Secret Key 사용!)
+      - name: Send Mail
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.office365.com
+          server_port: 587
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "[약속 확정] 친구가 정한 날짜와 장소입니다!"
+          to: 'agussstd@outlook.kr'
+          from: "Appointment Bot <${{ secrets.MAIL_USERNAME }}>"
+          secure: false
+          body: |
+            친구가 약속을 승인했습니다! 🎉
+            
+            - 선택한 날짜: ${{ steps.extract.outputs.date }}
+            - 선택한 장소: ${{ steps.extract.outputs.place }}
+
+      # 처리가 끝난 이슈는 깔끔하게 Close 처리 (기본 제공 토큰 사용)
+      - name: Close Issue
+        uses: peter-evans/close-issue@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} # 이건 따로 등록 안 해도 GitHub이 알아서 주는 토큰이야!
+          comment: "이메일 전송이 완료되어 이슈를 종료합니다. 멋진 시간 보내세요!"

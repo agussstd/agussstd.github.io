@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>놀러가자!</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            width: 350px;
+            min-height: 200px;
+        }
+        .btn-group {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        button {
+            padding: 10px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #yesBtn { background-color: #4CAF50; color: white; }
+        #noBtn { 
+            background-color: #f44336; 
+            color: white; 
+            position: absolute; 
+        }
+        .form-section { display: none; margin-top: 20px; text-align: left; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        select, input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #confirmBtn {
+            width: 100%;
+            background-color: #008CBA;
+            color: white;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<script src="script.js"></script>
+<div class="container" id="mainContainer">
+    <h2 id="title">나랑 놀러갈래? 😊</h2>
+    
+    <div class="btn-group" id="askButtons">
+        <button id="yesBtn">YES</button>
+        <button id="noBtn" tabindex="-1">NO</button>
+    </div>
+
+    <div class="form-section" id="formSection">
+        <label for="dateSelect">날짜 선택</label>
+        <select id="dateSelect"></select>
+
+        <label for="placeInput">장소 입력</label>
+        <input type="text" id="placeInput" placeholder="어디로 갈까?">
+
+        <button id="confirmBtn">Confirm</button>
+    </div>
+</div>
+
+<script>
+    const noBtn = document.getElementById('noBtn');
+    const yesBtn = document.getElementById('yesBtn');
+    const askButtons = document.getElementById('askButtons');
+    const formSection = document.getElementById('formSection');
+    const dateSelect = document.getElementById('dateSelect');
+    const title = document.getElementById('title');
+
+    // 1. NO 버튼 도망치기 (니게룽)
+    function moveNoButton() {
+        const container = document.getElementById('mainContainer');
+        const containerRect = container.getBoundingClientRect();
+        const btnRect = noBtn.getBoundingClientRect();
+
+        const maxX = containerRect.width - btnRect.width - 20;
+        const maxY = containerRect.height - btnRect.height - 20;
+
+        const randomX = Math.max(10, Math.floor(Math.random() * maxX));
+        const randomY = Math.max(50, Math.floor(Math.random() * maxY));
+
+        noBtn.style.left = randomX + 'px';
+        noBtn.style.top = randomY + 'px';
+    }
+
+    noBtn.addEventListener('mouseenter', moveNoButton);
+    noBtn.addEventListener('click', (e) => { e.preventDefault(); moveNoButton(); });
+
+    // 2. 날짜 목록 생성 (7월~8월 예시)
+    function initDates() {
+        const start = new Date(2026, 6, 4);
+        for (let i = 0; i < 30; i++) {
+            const nextDate = new Date(start);
+            nextDate.setDate(start.getDate() + i);
+            const optionText = `${nextDate.getMonth() + 1}월 ${nextDate.getDate()}일`;
+            const option = document.createElement('option');
+            option.value = optionText;
+            option.textContent = optionText;
+            dateSelect.appendChild(option);
+        }
+    }
+    initDates();
+
+    yesBtn.addEventListener('click', () => {
+        title.textContent = "날짜와 장소를 골라줘! 🚀";
+        askButtons.style.display = 'none';
+        formSection.style.display = 'block';
+        noBtn.style.display = 'none';
+    });
+
+    // 3. Confirm 클릭 시 Issue 생성 페이지로 이동
+    document.getElementById('confirmBtn').addEventListener('click', () => {
+        const selectedDate = dateSelect.value;
+        const enteredPlace = document.getElementById('placeInput').value.trim();
+
+        if (!enteredPlace) {
+            alert('장소를 입력해주세요!');
+            return;
+        }
+
+        const repoOwner = "agussstd";
+        const repoName = "agussstd.github.io";
+        
+        // 이슈 제목과 본문 템플릿 정의 (Actions가 파싱하기 쉽게 고정된 포맷 사용)
+        const issueTitle = encodeURIComponent("[약속 신청] 놀러갈 날짜와 장소 정보");
+        const issueBody = encodeURIComponent(`안녕하세요! 약속이 잡혔습니다.\n\n- 날짜: ${selectedDate}\n- 장소: ${enteredPlace}\n\n*이 이슈는 확인용 자동 발송 트리거입니다.*`);
+
+        // GitHub 이슈 생성 주소 (쿼리 스트링으로 제목과 내용 주입)
+        const githubIssueUrl = `https://github.com/${repoOwner}/${repoName}/issues/new?title=${issueTitle}&body=${issueBody}`;
+
+        alert('마지막 단계입니다! 열리는 페이지에서 [Submit new issue] 버튼을 누르면 최종 전송됩니다.');
+        window.open(githubIssueUrl, '_blank');
+    });
+</script>
+</body>
+</html>

@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
         formSection.style.display = 'block';
     });
 
-    // 4. Confirm 클릭 시 팝업 없이 EmailJS로 이메일 즉시 발송
+    // 4. Confirm 클릭 시 알림창 없이 EmailJS로 이메일 즉시 발송
     confirmBtn.addEventListener('click', () => {
         const selectedDate = dateSelect.value;
         const enteredPlace = document.getElementById('placeInput').value.trim();
@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // 중복 클릭 방지를 위해 버튼 비활성화
+        // 중복 클릭 방지를 위해 버튼 비활성화 및 텍스트 변경
         confirmBtn.disabled = true;
         confirmBtn.textContent = "전송 중...";
 
@@ -103,10 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
             to_email: 'agussstd@outlook.kr' 
         };
 
-        // EmailJS API 호출 (별도의 창 분리 없이 현재 페이지에서 비동기 처리)
+        // EmailJS API 호출 (외부 창 이동이나 중간 안내 팝업 없이 즉시 실행)
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
             .then((response) => {
-                alert('🎉 약속 정보가 성공적으로 전송되었습니다! 이메일(agussstd@outlook.kr)을 확인하세요.');
+                alert('🎉 약속 정보가 성공적으로 전송되었습니다!');
                 confirmBtn.textContent = "전송 완료!";
             }, (error) => {
                 console.error('EmailJS 오류:', error);

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>놀러가자!</title>
+    <title>Where_r_u_going?</title>
     <link rel="stylesheet" href="style.css">
     
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -68,7 +68,7 @@
 <body>
 <script src="script.js"></script>
 <div class="container" id="mainContainer">
-    <h2 id="title">나랑 놀러갈래? 😊</h2>
+    <h2 id="title">Join with me!</h2>
     
     <div class="btn-group" id="askButtons">
         <button id="yesBtn">YES</button>
@@ -129,7 +129,7 @@
     initDates();
 
     yesBtn.addEventListener('click', () => {
-        title.textContent = "날짜와 장소를 골라줘! 🚀";
+        title.textContent = "Choose date & place";
         askButtons.style.display = 'none';
         formSection.style.display = 'block';
         noBtn.style.display = 'none';

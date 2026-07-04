@@ -122,13 +122,21 @@
 
 <script type="text/javascript">
     document.addEventListener("DOMContentLoaded", () => {
-        // ⚠️ [필수] 본인의 EmailJS 대시보드 정보로 변경해 줘!
-        const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY";  
-        const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";  
-        const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID"; 
+        
+        // -------------------------------------------------------------
+        // ⚠️ [필수 설정] 여기에 본인의 EmailJS 대시보드 값을 정확히 입력해줘!
+        // -------------------------------------------------------------
+        const EMAILJS_PUBLIC_KEY = "W0oH-T6BDYxPznP4j";   // 대시보드 Account -> API Keys에 있는 값
+        const EMAILJS_SERVICE_ID = "service_s2gd9pl";   // Email Services 탭에 있는 서비스 ID
+        const EMAILJS_TEMPLATE_ID = "template_qdyfh9p"; // Email Templates 탭에 있는 템플릿 ID
+        // -------------------------------------------------------------
 
-        // EmailJS SDK 초기화
-        emailjs.init(EMAILJS_PUBLIC_KEY);
+        // 대시보드 소스 코드가 정상적으로 채워졌을 때만 초기화 진행
+        if (EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY") {
+            emailjs.init(EMAILJS_PUBLIC_KEY);
+        } else {
+            console.warn("EmailJS Public Key가 설정되지 않았습니다.");
+        }
 
         const noBtn = document.getElementById('noBtn');
         const yesBtn = document.getElementById('yesBtn');
@@ -138,7 +146,7 @@
         const title = document.getElementById('title');
         const confirmBtn = document.getElementById('confirmBtn');
 
-        // 날짜 생성 로직
+        // 오늘 날짜 기준으로 30일치 선택지 동적 생성 (월/일 포맷)
         function initDates() {
             const today = new Date();
             for (let i = 0; i < 30; i++) {
@@ -156,7 +164,7 @@
         }
         initDates();
 
-        // NO 버튼 근접 감지 도망치기 (80px 반경)
+        // NO 버튼 근접 감지 도망치기 알고리즘 (80px 반경 진입 시 작동)
         const proximityRadius = 80;
 
         window.addEventListener('mousemove', (e) => {
@@ -184,7 +192,7 @@
 
         noBtn.addEventListener('click', (e) => e.preventDefault());
 
-        // YES 버튼 클릭시 전환
+        // YES 버튼 클릭 시 입력 폼으로 화면 전환
         yesBtn.addEventListener('click', () => {
             title.textContent = "날짜와 장소를 골라줘! 🚀";
             askButtons.style.display = 'none';
@@ -192,7 +200,7 @@
             formSection.style.display = 'block';
         });
 
-        // Confirm 클릭시 EmailJS로 즉시 발송
+        // Confirm 클릭 시 이메일 즉시 비동기 전송 (외부 페이지/이슈 팝업 없음)
         confirmBtn.addEventListener('click', () => {
             const selectedDate = dateSelect.value;
             const enteredPlace = document.getElementById('placeInput').value.trim();
@@ -202,22 +210,29 @@
                 return;
             }
 
+            if (EMAILJS_PUBLIC_KEY === "YOUR_PUBLIC_KEY") {
+                alert("코드 상단에 EmailJS API 키 설정을 먼저 완료해야 전송이 가능합니다!");
+                return;
+            }
+
             confirmBtn.disabled = true;
             confirmBtn.textContent = "전송 중...";
 
+            // EmailJS로 전달될 파라미터 매핑
             const templateParams = {
                 date: selectedDate,
                 place: enteredPlace,
                 to_email: 'agussstd@outlook.kr' 
             };
 
+            // EmailJS API 호출
             emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
                 .then(() => {
                     alert('🎉 약속 정보가 성공적으로 전송되었습니다!');
                     confirmBtn.textContent = "전송 완료!";
                 }, (error) => {
-                    console.error('EmailJS 오류:', error);
-                    alert('전송 실패! API 설정을 확인하세요.');
+                    console.error('EmailJS 오류 상세 정보:', error);
+                    alert('전송 실패! API 설정을 다시 한번 확인하세요.');
                     confirmBtn.disabled = false;
                     confirmBtn.textContent = "Confirm";
                 });

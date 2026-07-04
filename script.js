@@ -1,9 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // ⚠️ 본인의 EmailJS 정보로 반드시 변경해야 작동해!
-    const EMAILJS_PUBLIC_KEY = "W0oH-T6BDYxPznP4j";  // 본인의 Public Key 입력
-    const EMAILJS_SERVICE_ID = "service_s2gd9pl";  // 본인의 Service ID 입력
-    const EMAILJS_TEMPLATE_ID = "template_qdyfh9p"; // 본인의 Template ID 입력
-// EmailJS SDK 초기화
+    // ⚠️ [필수] 본인의 EmailJS 대시보드 정보로 변경해야 이메일이 발송돼!
+    const EMAILJS_PUBLIC_KEY = "W0oH-T6BDYxPznP4j";  
+    const EMAILJS_SERVICE_ID = "Yservice_s2gd9pl";  
+    const EMAILJS_TEMPLATE_ID = "template_qdyfh9p"; 
+
+    // EmailJS SDK 초기화
     emailjs.init(EMAILJS_PUBLIC_KEY);
 
     const noBtn = document.getElementById('noBtn');
@@ -58,7 +59,6 @@ document.addEventListener("DOMContentLoaded", () => {
             let randomX = Math.max(padding, Math.floor(Math.random() * maxX));
             let randomY = Math.max(60, Math.floor(Math.random() * maxY));
 
-            // 새로 바뀔 위치가 마우스와 너무 가까우면 좌표 재보정
             const newDistX = (containerRect.left + randomX) - e.clientX;
             const newDistY = (containerRect.top + randomY) - e.clientY;
             if (Math.sqrt(newDistX * newDistX + newDistY * newDistY) < proximityRadius) {
@@ -71,18 +71,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 클릭이나 터치 시도 시 강제 차단
     noBtn.addEventListener('click', (e) => e.preventDefault());
 
     // 3. YES 버튼 클릭 시 입력 폼으로 전환
     yesBtn.addEventListener('click', () => {
-        title.textContent = "날짜와 장소를 골라줘! 🚀";
+        title.textContent = "날짜와 장소를 선택해주세요!";
         askButtons.style.display = 'none';
-        noBtn.style.display = 'none'; // 도망치던 버튼 숨김
+        noBtn.style.display = 'none'; 
         formSection.style.display = 'block';
     });
 
-    // 4. Confirm 클릭 시 알림창 없이 EmailJS로 이메일 즉시 발송
+    // 4. Confirm 클릭 시 외부 사이트 이동 없이 EmailJS로 이메일 즉시 발송
     confirmBtn.addEventListener('click', () => {
         const selectedDate = dateSelect.value;
         const enteredPlace = document.getElementById('placeInput').value.trim();
@@ -92,25 +91,25 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // 중복 클릭 방지를 위해 버튼 비활성화 및 텍스트 변경
+        // 버튼 비활성화 및 텍스트 변경
         confirmBtn.disabled = true;
         confirmBtn.textContent = "전송 중...";
 
-        // EmailJS로 넘겨줄 데이터 매핑
+        // EmailJS 데이터 매핑
         const templateParams = {
             date: selectedDate,
             place: enteredPlace,
             to_email: 'agussstd@outlook.kr' 
         };
 
-        // EmailJS API 호출 (외부 창 이동이나 중간 안내 팝업 없이 즉시 실행)
+        // 이 자리에서 바로 이메일 쏘기 (window.open 같은 팝업 주소 없음!)
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
             .then((response) => {
                 alert('🎉 약속 정보가 성공적으로 전송되었습니다!');
                 confirmBtn.textContent = "전송 완료!";
             }, (error) => {
                 console.error('EmailJS 오류:', error);
-                alert('전송에 실패했습니다. 설정 및 API 키를 확인해주세요.');
+                alert('전송에 실패했습니다. API 키 설정을 확인해주세요.');
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = "Confirm";
             });

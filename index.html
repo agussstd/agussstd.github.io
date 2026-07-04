@@ -155,7 +155,6 @@
         // GitHub 이슈 생성 주소 (쿼리 스트링으로 제목과 내용 주입)
         const githubIssueUrl = `https://github.com/${repoOwner}/${repoName}/issues/new?title=${issueTitle}&body=${issueBody}`;
 
-        alert('마지막 단계입니다! 열리는 페이지에서 [Submit new issue] 버튼을 누르면 최종 전송됩니다.');
         window.open(githubIssueUrl, '_blank');
     });
 </script>

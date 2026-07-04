@@ -62,7 +62,8 @@
             background-color: #f44336;
             color: white;
             position: absolute;
-            transition: none; /* 순간이동 모드 */
+            /* 🌟 부드럽게 미끄러지듯 움직이도록 transition 추가 */
+            transition: left 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), top 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         .form-section {
             display: none;
@@ -126,16 +127,13 @@
         // -------------------------------------------------------------
         // ⚠️ [필수 설정] 여기에 본인의 EmailJS 대시보드 값을 정확히 입력해줘!
         // -------------------------------------------------------------
-        const EMAILJS_PUBLIC_KEY = "W0oH-T6BDYxPznP4j";   // 대시보드 Account -> API Keys에 있는 값
-        const EMAILJS_SERVICE_ID = "service_s2gd9pl";   // Email Services 탭에 있는 서비스 ID
-        const EMAILJS_TEMPLATE_ID = "template_qdyfh9p"; // Email Templates 탭에 있는 템플릿 ID
+        const EMAILJS_PUBLIC_KEY = "W0oH-T6BDYxPznP4j";   
+        const EMAILJS_SERVICE_ID = "service_s2gd9pl";   
+        const EMAILJS_TEMPLATE_ID = "template_qdyfh9p"; 
         // -------------------------------------------------------------
 
-        // 대시보드 소스 코드가 정상적으로 채워졌을 때만 초기화 진행
         if (EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY") {
             emailjs.init(EMAILJS_PUBLIC_KEY);
-        } else {
-            console.warn("EmailJS Public Key가 설정되지 않았습니다.");
         }
 
         const noBtn = document.getElementById('noBtn');
@@ -146,21 +144,32 @@
         const title = document.getElementById('title');
         const confirmBtn = document.getElementById('confirmBtn');
 
-        // 오늘 날짜 기준으로 30일치 선택지 동적 생성 (월/일 포맷)
+        // 📅 1월 1일부터 12월 31일까지 목록 동적 생성 (올해 기준)
         function initDates() {
-            const today = new Date();
-            for (let i = 0; i < 30; i++) {
-                const nextDate = new Date(today);
-                nextDate.setDate(today.getDate() + i);
-                const month = nextDate.getMonth() + 1;
-                const date = nextDate.getDate();
+            const currentYear = new Date().getFullYear();
+            const startDate = new Date(currentYear, 0, 1); // 1월 1일
+            const endDate = new Date(currentYear, 11, 31); // 12월 31일
+            
+            let tempDate = new Date(startDate);
+            
+            while (tempDate <= endDate) {
+                const month = tempDate.getMonth() + 1;
+                const date = tempDate.getDate();
                 const optionText = `${month}월 ${date}일`;
                 
                 const option = document.createElement('option');
                 option.value = optionText;
                 option.textContent = optionText;
                 dateSelect.appendChild(option);
+                
+                // 다음 날짜로 1일 증가
+                tempDate.setDate(tempDate.getDate() + 1);
             }
+            
+            // 기본 선택값을 '오늘 날짜'로 맞춰두는 센스!
+            const today = new Date();
+            const todayText = `${today.getMonth() + 1}월 ${today.getDate()}일`;
+            dateSelect.value = todayText;
         }
         initDates();
 
@@ -200,7 +209,7 @@
             formSection.style.display = 'block';
         });
 
-        // Confirm 클릭 시 이메일 즉시 비동기 전송 (외부 페이지/이슈 팝업 없음)
+        // Confirm 클릭 시 이메일 즉시 비동기 전송
         confirmBtn.addEventListener('click', () => {
             const selectedDate = dateSelect.value;
             const enteredPlace = document.getElementById('placeInput').value.trim();
@@ -218,14 +227,12 @@
             confirmBtn.disabled = true;
             confirmBtn.textContent = "전송 중...";
 
-            // EmailJS로 전달될 파라미터 매핑
             const templateParams = {
                 date: selectedDate,
                 place: enteredPlace,
                 to_email: 'agussstd@outlook.kr' 
             };
 
-            // EmailJS API 호출
             emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
                 .then(() => {
                     alert('🎉 약속 정보가 성공적으로 전송되었습니다!');

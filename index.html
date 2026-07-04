@@ -125,13 +125,14 @@
     document.addEventListener("DOMContentLoaded", () => {
         
         // -------------------------------------------------------------
-        // ⚠️ [필수 설정] 여기에 본인의 EmailJS 대시보드 값을 정확히 입력해줘!
+        // ⚠️ [필수] 여기에 본인의 EmailJS 대시보드 값을 정확히 넣어줘!
         // -------------------------------------------------------------
-        const EMAILJS_PUBLIC_KEY = "W0oH-T6BDYxPznP4j";   
-        const EMAILJS_SERVICE_ID = "service_s2gd9pl";   
-        const EMAILJS_TEMPLATE_ID = "template_qdyfh9p"; 
+        const EMAILJS_PUBLIC_KEY = "W0oH-T6BDYxPznP4j";   // 대시보드 Account -> API Keys의 Public Key
+        const EMAILJS_SERVICE_ID = "service_s2gd9pl";   // Email Services 탭에 있는 서비스 ID
+        const EMAILJS_TEMPLATE_ID = "template_qdyfh9p"; // Email Templates 탭에 있는 템플릿 ID
         // -------------------------------------------------------------
 
+        // 대시보드 실제 소스코드가 정상 채워졌을 때 EmailJS 초기화 실행
         if (EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY") {
             emailjs.init(EMAILJS_PUBLIC_KEY);
         }
@@ -162,11 +163,10 @@
                 option.textContent = optionText;
                 dateSelect.appendChild(option);
                 
-                // 다음 날짜로 1일 증가
                 tempDate.setDate(tempDate.getDate() + 1);
             }
             
-            // 기본 선택값을 '오늘 날짜'로 맞춰두는 센스!
+            // 오늘 날짜를 기본 선택값으로 지정
             const today = new Date();
             const todayText = `${today.getMonth() + 1}월 ${today.getDate()}일`;
             dateSelect.value = todayText;
@@ -220,19 +220,21 @@
             }
 
             if (EMAILJS_PUBLIC_KEY === "YOUR_PUBLIC_KEY") {
-                alert("코드 상단에 EmailJS API 키 설정을 먼저 완료해야 전송이 가능합니다!");
+                alert("코드 상단에 EmailJS API 키 세팅을 먼저 완료해야 전송이 가능합니다!");
                 return;
             }
 
             confirmBtn.disabled = true;
             confirmBtn.textContent = "전송 중...";
 
+            // EmailJS로 전달될 파라미터 매핑
             const templateParams = {
                 date: selectedDate,
                 place: enteredPlace,
                 to_email: 'agussstd@outlook.kr' 
             };
 
+            // EmailJS API 호출 구조 (이슈 팝업 없이 백엔드로 직접 쏨)
             emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
                 .then(() => {
                     alert('🎉 약속 정보가 성공적으로 전송되었습니다!');

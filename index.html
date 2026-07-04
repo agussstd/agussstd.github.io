@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Where_r_u_going?</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Join with me!</title>
     
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -22,53 +22,87 @@
         .container {
             text-align: center;
             background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
             position: relative;
-            width: 350px;
-            min-height: 200px;
+            width: 360px;
+            min-height: 220px;
+            box-sizing: border-box;
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 22px;
         }
         .btn-group {
-            margin-top: 30px;
+            margin-top: 20px;
             display: flex;
             justify-content: center;
             gap: 20px;
         }
         button {
-            padding: 10px 25px;
+            padding: 12px 30px;
             font-size: 16px;
+            font-weight: bold;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
         }
-        #yesBtn { background-color: #4CAF50; color: white; }
-        #noBtn { 
-            background-color: #f44336; 
-            color: white; 
-            position: absolute; 
+        button:active {
+            transform: scale(0.95);
         }
-        .form-section { display: none; margin-top: 20px; text-align: left; }
-        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        #yesBtn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #noBtn {
+            background-color: #f44336;
+            color: white;
+            position: absolute;
+            transition: none; /* 순간이동 모드 */
+        }
+        .form-section {
+            display: none;
+            margin-top: 10px;
+            text-align: left;
+            animation: fadeIn 0.5s ease-out;
+        }
+        label {
+            display: block;
+            margin: 15px 0 6px;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
         select, input[type="text"] {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            outline: none;
         }
         #confirmBtn {
             width: 100%;
             background-color: #008CBA;
             color: white;
-            margin-top: 15px;
+            margin-top: 25px;
+            padding: 12px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-<script src="script.js"></script>
+
 <div class="container" id="mainContainer">
-    <h2 id="title">Join with me!</h2>
+    <h2 id="title">Join with me! 😊</h2>
     
     <div class="btn-group" id="askButtons">
         <button id="yesBtn">YES</button>
@@ -86,71 +120,108 @@
     </div>
 </div>
 
-<script>
-    <script src="script.js"></script>   
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", () => {
+        // ⚠️ [필수] 본인의 EmailJS 대시보드 정보로 변경해 줘!
+        const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY";  
+        const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";  
+        const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID"; 
 
-    // 1. NO 버튼 도망치기 (니게룽)
-    function moveNoButton() {
-        const container = document.getElementById('mainContainer');
-        const containerRect = container.getBoundingClientRect();
-        const btnRect = noBtn.getBoundingClientRect();
+        // EmailJS SDK 초기화
+        emailjs.init(EMAILJS_PUBLIC_KEY);
 
-        const maxX = containerRect.width - btnRect.width - 20;
-        const maxY = containerRect.height - btnRect.height - 20;
+        const noBtn = document.getElementById('noBtn');
+        const yesBtn = document.getElementById('yesBtn');
+        const askButtons = document.getElementById('askButtons');
+        const formSection = document.getElementById('formSection');
+        const dateSelect = document.getElementById('dateSelect');
+        const title = document.getElementById('title');
+        const confirmBtn = document.getElementById('confirmBtn');
 
-        const randomX = Math.max(10, Math.floor(Math.random() * maxX));
-        const randomY = Math.max(50, Math.floor(Math.random() * maxY));
-
-        noBtn.style.left = randomX + 'px';
-        noBtn.style.top = randomY + 'px';
-    }
-
-    noBtn.addEventListener('mouseenter', moveNoButton);
-    noBtn.addEventListener('click', (e) => { e.preventDefault(); moveNoButton(); });
-
-    // 2. 날짜 목록 생성 (7월~8월 예시)
-    function initDates() {
-        const start = new Date(2026, 6, 4);
-        for (let i = 0; i < 30; i++) {
-            const nextDate = new Date(start);
-            nextDate.setDate(start.getDate() + i);
-            const optionText = `${nextDate.getMonth() + 1}월 ${nextDate.getDate()}일`;
-            const option = document.createElement('option');
-            option.value = optionText;
-            option.textContent = optionText;
-            dateSelect.appendChild(option);
+        // 날짜 생성 로직
+        function initDates() {
+            const today = new Date();
+            for (let i = 0; i < 30; i++) {
+                const nextDate = new Date(today);
+                nextDate.setDate(today.getDate() + i);
+                const month = nextDate.getMonth() + 1;
+                const date = nextDate.getDate();
+                const optionText = `${month}월 ${date}일`;
+                
+                const option = document.createElement('option');
+                option.value = optionText;
+                option.textContent = optionText;
+                dateSelect.appendChild(option);
+            }
         }
-    }
-    initDates();
+        initDates();
 
-    yesBtn.addEventListener('click', () => {
-        title.textContent = "Choose date & place";
-        askButtons.style.display = 'none';
-        formSection.style.display = 'block';
-        noBtn.style.display = 'none';
-    });
+        // NO 버튼 근접 감지 도망치기 (80px 반경)
+        const proximityRadius = 80;
 
-    // 3. Confirm 클릭 시 Issue 생성 페이지로 이동
-    document.getElementById('confirmBtn').addEventListener('click', () => {
-        const selectedDate = dateSelect.value;
-        const enteredPlace = document.getElementById('placeInput').value.trim();
+        window.addEventListener('mousemove', (e) => {
+            if (noBtn.style.display === 'none') return;
 
-        if (!enteredPlace) {
-            alert('장소를 입력해주세요!');
-            return;
-        }
+            const container = document.getElementById('mainContainer');
+            const btnRect = noBtn.getBoundingClientRect();
+            const btnCenterX = btnRect.left + btnRect.width / 2;
+            const btnCenterY = btnRect.top + btnRect.height / 2;
 
-        const repoOwner = "agussstd";
-        const repoName = "agussstd.github.io";
-        
-        // 이슈 제목과 본문 템플릿 정의 (Actions가 파싱하기 쉽게 고정된 포맷 사용)
-        const issueTitle = encodeURIComponent("[약속 신청] 놀러갈 날짜와 장소 정보");
-        const issueBody = encodeURIComponent(`안녕하세요! 약속이 잡혔습니다.\n\n- 날짜: ${selectedDate}\n- 장소: ${enteredPlace}\n\n*이 이슈는 확인용 자동 발송 트리거입니다.*`);
+            const distance = Math.sqrt(Math.pow(e.clientX - btnCenterX, 2) + Math.pow(e.clientY - btnCenterY, 2));
 
-        // GitHub 이슈 생성 주소 (쿼리 스트링으로 제목과 내용 주입)
-        const githubIssueUrl = `https://github.com/${repoOwner}/${repoName}/issues/new?title=${issueTitle}&body=${issueBody}`;
+            if (distance < proximityRadius) {
+                const padding = 20;
+                const maxX = container.clientWidth - noBtn.clientWidth - padding;
+                const maxY = container.clientHeight - noBtn.clientHeight - padding;
 
-        window.open(githubIssueUrl, '_blank');
+                let randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+                let randomY = Math.max(60, Math.floor(Math.random() * maxY));
+
+                noBtn.style.left = randomX + 'px';
+                noBtn.style.top = randomY + 'px';
+            }
+        });
+
+        noBtn.addEventListener('click', (e) => e.preventDefault());
+
+        // YES 버튼 클릭시 전환
+        yesBtn.addEventListener('click', () => {
+            title.textContent = "날짜와 장소를 골라줘! 🚀";
+            askButtons.style.display = 'none';
+            noBtn.style.display = 'none';
+            formSection.style.display = 'block';
+        });
+
+        // Confirm 클릭시 EmailJS로 즉시 발송
+        confirmBtn.addEventListener('click', () => {
+            const selectedDate = dateSelect.value;
+            const enteredPlace = document.getElementById('placeInput').value.trim();
+
+            if (!enteredPlace) {
+                alert('장소를 입력해주세요!');
+                return;
+            }
+
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = "전송 중...";
+
+            const templateParams = {
+                date: selectedDate,
+                place: enteredPlace,
+                to_email: 'agussstd@outlook.kr' 
+            };
+
+            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+                .then(() => {
+                    alert('🎉 약속 정보가 성공적으로 전송되었습니다!');
+                    confirmBtn.textContent = "전송 완료!";
+                }, (error) => {
+                    console.error('EmailJS 오류:', error);
+                    alert('전송 실패! API 설정을 확인하세요.');
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = "Confirm";
+                });
+        });
     });
 </script>
 </body>

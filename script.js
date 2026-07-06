@@ -1,69 +1,114 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // ⚠️ [필수] 본인의 EmailJS 대시보드 정보로 변경해야 이메일이 발송돼!
-    const EMAILJS_PUBLIC_KEY = "W0oH-T6BDYxPznP4j";  
-    const EMAILJS_SERVICE_ID = "Yservice_s2gd9pl";  
+    
+    // -------------------------------------------------------------
+    //   EmailJS 대시보드 API 키 값 완벽 세팅
+    // -------------------------------------------------------------
+    const EMAILJS_PUBLIC_KEY = "W0oH-T6BDYxPznP4j";   
+    const EMAILJS_SERVICE_ID = "service_s2gd9pl";   
     const EMAILJS_TEMPLATE_ID = "template_qdyfh9p"; 
+    // -------------------------------------------------------------
 
-    // EmailJS SDK 초기화
-    emailjs.init(EMAILJS_PUBLIC_KEY);
+    // EmailJS 초기화 실행
+    if (EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY") {
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+    }
 
     const noBtn = document.getElementById('noBtn');
     const yesBtn = document.getElementById('yesBtn');
     const askButtons = document.getElementById('askButtons');
     const formSection = document.getElementById('formSection');
-    const dateSelect = document.getElementById('dateSelect');
+    const yearSelect = document.getElementById('yearSelect');
+    const monthSelect = document.getElementById('monthSelect');
+    const daySelect = document.getElementById('daySelect');
     const title = document.getElementById('title');
     const confirmBtn = document.getElementById('confirmBtn');
 
-    // 1. 오늘 날짜 기준으로 30일치 목록 동적 생성 (월/일 포맷)
-    function initDates() {
-        const today = new Date();
-        for (let i = 0; i < 30; i++) {
-            const nextDate = new Date(today);
-            nextDate.setDate(today.getDate() + i);
-            
-            const month = nextDate.getMonth() + 1;
-            const date = nextDate.getDate();
-            const optionText = `${month}월 ${date}일`;
-            
-            const option = document.createElement('option');
-            option.value = optionText;
-            option.textContent = optionText;
-            dateSelect.appendChild(option);
-        }
+    // 첫 로딩 시 NO 버튼 위치 강제 지정
+    function setInitialNoBtnPosition() {
+        const rect = noBtn.getBoundingClientRect();
+        noBtn.style.left = rect.left + 'px';
+        noBtn.style.top = rect.top + 'px';
     }
-    initDates();
+    setTimeout(setInitialNoBtnPosition, 100);
 
-    // 2. NO 버튼 근접 감지 도망치기 (마우스가 80px 반경 진입 시 작동)
-    const proximityRadius = 80;
+    // 📅 [년/월/일] 드롭다운 리스트 동적 생성 함수
+    function initYearMonthDay() {
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        
+        for (let y = currentYear; y <= currentYear + 1; y++) {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = `${y}년`;
+            yearSelect.appendChild(opt);
+        }
+        yearSelect.value = currentYear;
+
+        for (let m = 1; m <= 12; m++) {
+            const opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = `${m}월`;
+            monthSelect.appendChild(opt);
+        }
+        monthSelect.value = today.getMonth() + 1;
+
+        function updateDays() {
+            daySelect.innerHTML = '';
+            const selectedYear = parseInt(yearSelect.value);
+            const selectedMonth = parseInt(monthSelect.value);
+            const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
+
+            for (let d = 1; d <= lastDay; d++) {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = `${d}일`;
+                daySelect.appendChild(opt);
+            }
+        }
+
+        yearSelect.addEventListener('change', updateDays);
+        monthSelect.addEventListener('change', updateDays);
+        
+        updateDays();
+        daySelect.value = today.getDate();
+    }
+    initYearMonthDay();
+
+    // 🌟 마우스가 이 거리 안으로 들어오면 밀려나기 시작하는 반경 (가깝게 고정)
+    const proximityRadius = 75; 
 
     window.addEventListener('mousemove', (e) => {
         if (noBtn.style.display === 'none') return;
 
-        const container = document.getElementById('mainContainer');
         const btnRect = noBtn.getBoundingClientRect();
         const btnCenterX = btnRect.left + btnRect.width / 2;
         const btnCenterY = btnRect.top + btnRect.height / 2;
 
-        const distanceX = e.clientX - btnCenterX;
-        const distanceY = e.clientY - btnCenterY;
-        const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+        // 마우스와 버튼 중심 사이의 X, Y 거리 계산
+        const diffX = btnCenterX - e.clientX;
+        const diffY = btnCenterY - e.clientY;
+        const distance = Math.sqrt(diffX * diffX + diffY * diffY);
 
+        // 마우스가 바짝 다가왔을 때 작동
         if (distance < proximityRadius) {
-            const containerRect = container.getBoundingClientRect();
-            const padding = 20;
+            const padding = 30;
             
-            const maxX = container.clientWidth - noBtn.clientWidth - padding;
-            const maxY = container.clientHeight - noBtn.clientHeight - padding;
+            // 🌟 마우스가 다가오는 방향의 '정반대 각도'를 구함
+            const angle = Math.atan2(diffY, diffX);
+            
+            // 🌟 멀리 도망치지 않고 마우스 바로 옆(약 80px 근처)에 딱 붙어있도록 좌표 설정
+            // 마우스 위치를 기준으로 반대 방향 벡터만큼만 정교하게 밀어냄
+            let randomX = e.clientX + Math.cos(angle) * 85;
+            let randomY = e.clientY + Math.sin(angle) * 85;
 
-            let randomX = Math.max(padding, Math.floor(Math.random() * maxX));
-            let randomY = Math.max(60, Math.floor(Math.random() * maxY));
+            // 브라우저 화면 창 밖으로 완전히 탈출하는 것 방지 (화면 구석 페일세이프)
+            const maxX = window.innerWidth - noBtn.clientWidth - padding;
+            const maxY = window.innerHeight - noBtn.clientHeight - padding;
 
-            const newDistX = (containerRect.left + randomX) - e.clientX;
-            const newDistY = (containerRect.top + randomY) - e.clientY;
-            if (Math.sqrt(newDistX * newDistX + newDistY * newDistY) < proximityRadius) {
-                randomX = (randomX + 100) % maxX;
-                randomY = (randomY + 100) % maxY;
+            // 만약 구석에 몰려 더 이상 도망칠 곳이 없다면 완전히 반대편으로 팅겨줌
+            if (randomX < padding || randomX > maxX || randomY < padding || randomY > maxY) {
+                randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+                randomY = Math.max(padding, Math.floor(Math.random() * maxY));
             }
 
             noBtn.style.left = randomX + 'px';
@@ -71,19 +116,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // NO 버튼 클릭 차단
     noBtn.addEventListener('click', (e) => e.preventDefault());
 
-    // 3. YES 버튼 클릭 시 입력 폼으로 전환
+    // YES 버튼 클릭 시 입력 폼으로 전환
     yesBtn.addEventListener('click', () => {
-        title.textContent = "날짜와 장소를 선택해주세요!";
+        title.textContent = "날짜와 장소를 골라주세요.";
         askButtons.style.display = 'none';
-        noBtn.style.display = 'none'; 
+        noBtn.style.display = 'none';
         formSection.style.display = 'block';
     });
 
-    // 4. Confirm 클릭 시 외부 사이트 이동 없이 EmailJS로 이메일 즉시 발송
+    // Confirm 버튼 클릭 시 데이터 전송
     confirmBtn.addEventListener('click', () => {
-        const selectedDate = dateSelect.value;
+        const yearVal = yearSelect.value;
+        const monthVal = monthSelect.value;
+        const dayVal = daySelect.value;
+        const selectedDate = `${yearVal}년 ${monthVal}월 ${dayVal}일`;
+
         const enteredPlace = document.getElementById('placeInput').value.trim();
 
         if (!enteredPlace) {
@@ -91,25 +141,22 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // 버튼 비활성화 및 텍스트 변경
         confirmBtn.disabled = true;
         confirmBtn.textContent = "전송 중...";
 
-        // EmailJS 데이터 매핑
         const templateParams = {
             date: selectedDate,
             place: enteredPlace,
             to_email: 'agussstd@outlook.kr' 
         };
 
-        // 이 자리에서 바로 이메일 쏘기 (window.open 같은 팝업 주소 없음!)
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-            .then((response) => {
-                alert('🎉 약속 정보가 성공적으로 전송되었습니다!');
+            .then(() => {
+                alert('정보가 성공적으로 전달되었습니다.');
                 confirmBtn.textContent = "전송 완료!";
             }, (error) => {
-                console.error('EmailJS 오류:', error);
-                alert('전송에 실패했습니다. API 키 설정을 확인해주세요.');
+                console.error('EmailJS 오류 상세 정보:', error);
+                alert('전송 실패!');
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = "Confirm";
             });

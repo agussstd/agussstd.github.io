@@ -1,14 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
     
     // -------------------------------------------------------------
-    //   EmailJS 대시보드 API 키 값 완벽 세팅
+    //   EmailJS 대시보드 API 키 세팅
     // -------------------------------------------------------------
     const EMAILJS_PUBLIC_KEY = "W0oH-T6BDYxPznP4j";   
     const EMAILJS_SERVICE_ID = "service_s2gd9pl";   
     const EMAILJS_TEMPLATE_ID = "template_qdyfh9p"; 
     // -------------------------------------------------------------
 
-    // EmailJS 초기화 실행
     if (EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY") {
         emailjs.init(EMAILJS_PUBLIC_KEY);
     }
@@ -31,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     setTimeout(setInitialNoBtnPosition, 100);
 
-    // 📅 [년/월/일] 드롭다운 리스트 동적 생성 함수
+    // 📅 [년/월/일] 드롭다운 리스트 세팅
     function initYearMonthDay() {
         const today = new Date();
         const currentYear = today.getFullYear();
@@ -74,8 +73,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     initYearMonthDay();
 
-    // 🌟 마우스가 이 거리 안으로 들어오면 밀려나기 시작하는 반경 (가깝게 고정)
-    const proximityRadius = 75; 
+    // 🌟 핵심: 버튼 중심과 마우스 포인터가 유지할 '절대 안전 반경' (단위: 픽셀)
+    // 버튼 너비의 절반 + 약간의 여유 공간. 이 간격 안으로는 마우스가 절대 들어올 수 없음.
+    const safeRadius = 60; 
 
     window.addEventListener('mousemove', (e) => {
         if (noBtn.style.display === 'none') return;
@@ -84,39 +84,47 @@ document.addEventListener("DOMContentLoaded", () => {
         const btnCenterX = btnRect.left + btnRect.width / 2;
         const btnCenterY = btnRect.top + btnRect.height / 2;
 
-        // 마우스와 버튼 중심 사이의 X, Y 거리 계산
         const diffX = btnCenterX - e.clientX;
         const diffY = btnCenterY - e.clientY;
         const distance = Math.sqrt(diffX * diffX + diffY * diffY);
 
-        // 마우스가 바짝 다가왔을 때 작동
-        if (distance < proximityRadius) {
-            const padding = 30;
-            
-            // 🌟 마우스가 다가오는 방향의 '정반대 각도'를 구함
+        // 마우스가 안전 반경(60px) 안으로 파고들려고 하면 작동
+        if (distance < safeRadius) {
             const angle = Math.atan2(diffY, diffX);
             
-            // 🌟 멀리 도망치지 않고 마우스 바로 옆(약 80px 근처)에 딱 붙어있도록 좌표 설정
-            // 마우스 위치를 기준으로 반대 방향 벡터만큼만 정교하게 밀어냄
-            let randomX = e.clientX + Math.cos(angle) * 85;
-            let randomY = e.clientY + Math.sin(angle) * 85;
+            // 🌟 마우스가 밀고 들어온 만큼만 정확히 밀어냄 (무조건 마우스 중심으로부터 60px 거리를 유지)
+            // 화면 멀리 날아가는 게 아니라, 마우스가 1px 움직이면 버튼도 1px만 움직임
+            let targetCenterX = e.clientX + Math.cos(angle) * safeRadius;
+            let targetCenterY = e.clientY + Math.sin(angle) * safeRadius;
 
-            // 브라우저 화면 창 밖으로 완전히 탈출하는 것 방지 (화면 구석 페일세이프)
-            const maxX = window.innerWidth - noBtn.clientWidth - padding;
-            const maxY = window.innerHeight - noBtn.clientHeight - padding;
+            // 중심 좌표를 버튼의 좌측 상단(left, top) 좌표로 변환
+            let targetLeft = targetCenterX - (btnRect.width / 2);
+            let targetTop = targetCenterY - (btnRect.height / 2);
 
-            // 만약 구석에 몰려 더 이상 도망칠 곳이 없다면 완전히 반대편으로 팅겨줌
-            if (randomX < padding || randomX > maxX || randomY < padding || randomY > maxY) {
-                randomX = Math.max(padding, Math.floor(Math.random() * maxX));
-                randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+            // 브라우저 경계선 밖으로 나가지 못하게 막기 위한 안전 여백
+            const padding = 15;
+            const maxX = window.innerWidth - btnRect.width - padding;
+            const maxY = window.innerHeight - btnRect.height - padding;
+
+            // 🌟 벽에 닿았을 때의 처리: 텔레포트하지 않고 벽을 타고 미끄러지도록 설계
+            if (targetLeft < padding || targetLeft > maxX) {
+                targetLeft = Math.max(padding, Math.min(targetLeft, maxX));
+                // 좌우 벽에 막히면 위아래로 살짝(30px) 빗겨나가게 해서 틈을 줌
+                targetTop += (e.clientY > targetCenterY) ? -30 : 30;
+            }
+            if (targetTop < padding || targetTop > maxY) {
+                targetTop = Math.max(padding, Math.min(targetTop, maxY));
+                // 상하 벽에 막히면 좌우로 살짝(30px) 빗겨나가게 해서 틈을 줌
+                targetLeft += (e.clientX > targetCenterX) ? -30 : 30;
             }
 
-            noBtn.style.left = randomX + 'px';
-            noBtn.style.top = randomY + 'px';
+            // 계산된 최종 위치를 즉시(0초 딜레이) 반영
+            noBtn.style.left = targetLeft + 'px';
+            noBtn.style.top = targetTop + 'px';
         }
     });
 
-    // NO 버튼 클릭 차단
+    // 클릭 차단
     noBtn.addEventListener('click', (e) => e.preventDefault());
 
     // YES 버튼 클릭 시 입력 폼으로 전환
@@ -152,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
             .then(() => {
-                alert('정보가 성공적으로 전달되었습니다.');
+                alert('정보가 성공적으로 전송되었습니다.');
                 confirmBtn.textContent = "전송 완료!";
             }, (error) => {
                 console.error('EmailJS 오류 상세 정보:', error);
